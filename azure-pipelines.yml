@@ -1,0 +1,65 @@
+trigger:
+  branches:
+    include:
+      - main
+
+variables:
+- group: crime-pipeline-secrets
+
+stages:
+
+- stage: Dev
+  displayName: 'Run in Dev'
+  jobs:
+  - job: RunPipeline
+    displayName: 'Run Crime ETL'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.10'
+      displayName: 'Set up Python'
+
+    - script: |
+        pip install pandas requests azure-storage-file-datalake
+      displayName: 'Install dependencies'
+
+    - script: |
+        python notebook/bronze.py
+      displayName: 'Run Bronze stage'
+      env:
+        TORONTO_API_URL: $(TORONTO_API_URL)
+        STORAGE_ACCOUNT_NAME: $(STORAGE_ACCOUNT_NAME)
+        STORAGE_ACCOUNT_KEY: $(STORAGE_ACCOUNT_KEY)
+
+    - script: |
+        python notebook/silver.py
+      displayName: 'Run Silver stage'
+      env:
+        STORAGE_ACCOUNT_NAME: $(STORAGE_ACCOUNT_NAME)
+        STORAGE_ACCOUNT_KEY: $(STORAGE_ACCOUNT_KEY)
+
+    - script: |
+        python notebook/gold.py
+      displayName: 'Run Gold stage'
+      env:
+        STORAGE_ACCOUNT_NAME: $(STORAGE_ACCOUNT_NAME)
+        STORAGE_ACCOUNT_KEY: $(STORAGE_ACCOUNT_KEY)
+
+- stage: Prod
+  displayName: 'Deploy to Prod'
+  dependsOn: Dev
+  condition: succeeded()
+  jobs:
+  - deployment: DeployProd
+    displayName: 'Prod Approval + Deploy'
+    environment: 'production'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - script: |
+              echo "Dev passed. Deploying to production."
+            displayName: 'Prod deployment step'
