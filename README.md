@@ -1,4 +1,4 @@
-# Toronto Crime Patrol Planning Pipeline
+# Toronto Crime Data Pipeline
 
 A production style data pipeline built on Azure, ingesting live Toronto Police crime data and transforming it into patrol planning insights. Built to learn and demonstrate the exact Azure stack (ADF, Databricks, ADLS Gen2, Azure DevOps) used by Azure based DevOps/BI platform teams.
 
