@@ -37,6 +37,12 @@ Eight explicit data quality controls, not just formatting:
 7. **Data quality flag column.** Flagged records are kept and labeled, not silently deleted, supporting auditability.
 8. **Lineage and audit metadata.** Every row is stamped with its source and ingestion timestamp for traceability.
 
+## Dashboard
+
+![Dashboard](dashboard-full.png)
+
+The map shows individual incidents by location. The hotspot matrix shows neighbourhood by hour incident counts, shaded so the highest priority combinations stand out. The trend line shows the citywide pattern across the 24 hour day.
+
 ## CI/CD pipeline (Azure DevOps)
 
 **Trigger:** any commit to `main`, plus a daily scheduled cron trigger.
@@ -46,6 +52,14 @@ Eight explicit data quality controls, not just formatting:
 **Prod stage:** gated behind a real manual approval check on the `production` environment. Verified twice, including catching and fixing a case where the approval gate silently stopped enforcing after a config change.
 
 **Secrets:** stored in an Azure DevOps variable group (`TORONTO_API_URL`, `STORAGE_ACCOUNT_NAME`, `STORAGE_ACCOUNT_KEY`), masked, injected via YAML `env` blocks, and read in Python via `os.environ.get(...)`. None appear in committed code.
+
+![Pipeline run](pipeline-run.png)
+
+Bronze, silver, and gold run as three separate, separately logged steps in the Dev stage. Prod is gated behind a manual approval.
+
+ADF lands fresh data in bronze and then directly triggers this pipeline through the Azure DevOps REST API, so the chain is event driven off real data arrival.
+
+![ADF trigger chain](adf-trigger.png)
 
 ## Tech stack
 
@@ -79,5 +93,8 @@ notebook/
   gold.py              patrol planning and Power BI ready tables
 azure-pipelines.yml     multi stage CI/CD pipeline
 architecture.png        architecture diagram
+dashboard-full.png      Power BI dashboard screenshot
+pipeline-run.png        Azure DevOps pipeline run screenshot
+adf-trigger.png         ADF activity chain screenshot
 README.md
 ```
