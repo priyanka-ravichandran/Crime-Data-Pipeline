@@ -1,4 +1,4 @@
-# Toronto Crime Data Pipeline
+# Toronto Crime Patrol Planning Pipeline
 
 A production style data pipeline built on Azure, ingesting live Toronto Police crime data and transforming it into patrol planning insights. Built to learn and demonstrate the exact Azure stack (ADF, Databricks, ADLS Gen2, Azure DevOps) used by Azure based DevOps/BI platform teams.
 
@@ -12,6 +12,7 @@ Cross cutting pieces:
 * Azure DevOps handles CI/CD: a Dev stage runs automatically, then a manual approval gate, then Prod.
 * Secrets live in an Azure DevOps secure variable group (masked).
 * A lifecycle policy automatically deletes bronze and silver files after 7 days.
+* An Azure Monitor alert rule watches the ADF pipeline for failed runs and emails on failure.
 
 ## Why I built it this way (decisions and tradeoffs)
 
