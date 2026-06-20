@@ -1,4 +1,4 @@
-# Toronto Crime Data Pipeline
+# Toronto Crime Patrol Planning Pipeline
 
 A production style data pipeline built on Azure, ingesting live Toronto Police crime data and transforming it into patrol planning insights. Built to learn and demonstrate the exact Azure stack (ADF, Databricks, ADLS Gen2, Azure DevOps) used by Azure based DevOps/BI platform teams.
 
@@ -6,37 +6,12 @@ A production style data pipeline built on Azure, ingesting live Toronto Police c
 
 ## Architecture
 
-```
-Toronto Police API
-       |
-       v
-ADF (scheduled trigger)
-  Web activity: calls the live API
-  Copy activity: lands raw response into ADLS bronze
-  Web activity: triggers Azure DevOps pipeline via REST API
-       |
-       v
-ADLS Gen2 (data lake)
-
-  bronze       silver        gold
-  (raw)        (cleaned,     (patrol planning
-                validated,   and Power BI ready
-                deduped)     tables)
-
-       |
-       v
-  Power BI Dashboard
-  Map of incidents by type
-  Neighbourhood by hour hotspot matrix
-  Citywide hourly trend
-```
+![Architecture diagram](architecture.png)
 
 Cross cutting pieces:
 * Azure DevOps handles CI/CD: a Dev stage runs automatically, then a manual approval gate, then Prod.
 * Secrets live in an Azure DevOps secure variable group (masked).
 * A lifecycle policy automatically deletes bronze and silver files after 7 days.
-
-**[Architecture diagram image goes here. Export from the chat and add to repo as `docs/architecture.png`]**
 
 ## Why I built it this way (decisions and tradeoffs)
 
@@ -84,6 +59,15 @@ Eight explicit data quality controls, not just formatting:
 | Visualization | Power BI Desktop |
 | Source control | Git (Azure DevOps Repos, mirrored here) |
 
+## How to run
+
+Infrastructure for this project is currently provisioned manually through the Azure Portal. I am working on Terraform modules to provision the resource group, storage account, ADLS containers, Data Factory, and the Azure DevOps variable group, so the whole environment can be stood up from code rather than by hand. Once that is in place, running this project will be:
+
+1. `terraform apply` to provision the Azure resources
+2. Set the pipeline secrets (`TORONTO_API_URL`, `STORAGE_ACCOUNT_NAME`, `STORAGE_ACCOUNT_KEY`) in the Azure DevOps variable group
+3. Push to `main`, which triggers the Dev stage automatically
+4. Approve the Prod stage when prompted
+
 ## Repository structure
 
 ```
@@ -94,8 +78,6 @@ notebook/
   silver.py            validation, cleaning, dedup
   gold.py              patrol planning and Power BI ready tables
 azure-pipelines.yml     multi stage CI/CD pipeline
-docs/
-  architecture.png     architecture diagram
-  dashboard-screenshots/
+architecture.png        architecture diagram
 README.md
 ```
